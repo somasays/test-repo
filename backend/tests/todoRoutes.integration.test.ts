@@ -679,4 +679,226 @@ describe('Todo Routes Integration Tests', () => {
       expect(remainingResponse.body.data.completed).toBe(false);
     });
   });
+
+  describe('GET /api/todos with search and filter', () => {
+    let testTodos: any[];
+
+    beforeEach(async () => {
+      // Create test todos for search and filter testing
+      const todo1 = await request(app)
+        .post('/api/todos')
+        .send({ title: 'Meeting with team', description: 'Weekly sync discussion' })
+        .expect(201);
+
+      const todo2 = await request(app)
+        .post('/api/todos')
+        .send({ title: 'Code review session', description: 'Review pull requests' })
+        .expect(201);
+
+      const todo3 = await request(app)
+        .post('/api/todos')
+        .send({ title: 'Team standup', description: 'Daily standup with development team' })
+        .expect(201);
+
+      const todo4 = await request(app)
+        .post('/api/todos')
+        .send({ title: 'Update documentation', description: 'Add API examples' })
+        .expect(201);
+
+      // Mark some todos as completed
+      await request(app)
+        .put(`/api/todos/${todo2.body.data.id}`)
+        .send({ completed: true })
+        .expect(200);
+
+      await request(app)
+        .put(`/api/todos/${todo4.body.data.id}`)
+        .send({ completed: true })
+        .expect(200);
+
+      testTodos = [todo1.body.data, todo2.body.data, todo3.body.data, todo4.body.data];
+    });
+
+    it('should search todos by query parameter', async () => {
+      const response = await request(app)
+        .get('/api/todos?q=team')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.todos).toHaveLength(2);
+      expect(response.body.data.filtered).toBe(2);
+      expect(response.body.data.total).toBe(4);
+      expect(response.body.data.query.q).toBe('team');
+
+      const titles = response.body.data.todos.map((todo: any) => todo.title);
+      expect(titles).toEqual(expect.arrayContaining([
+        'Meeting with team',
+        'Team standup'
+      ]));
+    });
+
+    it('should filter todos by status', async () => {
+      const response = await request(app)
+        .get('/api/todos?status=completed')
+        .expect(200);
+
+      expect(response.body.data.todos).toHaveLength(2);
+      expect(response.body.data.filtered).toBe(2);
+      expect(response.body.data.query.status).toBe('completed');
+      
+      response.body.data.todos.forEach((todo: any) => {
+        expect(todo.completed).toBe(true);
+      });
+    });
+
+    it('should filter todos by pending status', async () => {
+      const response = await request(app)
+        .get('/api/todos?status=pending')
+        .expect(200);
+
+      expect(response.body.data.todos).toHaveLength(2);
+      expect(response.body.data.filtered).toBe(2);
+      expect(response.body.data.query.status).toBe('pending');
+      
+      response.body.data.todos.forEach((todo: any) => {
+        expect(todo.completed).toBe(false);
+      });
+    });
+
+    it('should combine search and filter', async () => {
+      const response = await request(app)
+        .get('/api/todos?q=team&status=pending')
+        .expect(200);
+
+      expect(response.body.data.todos).toHaveLength(2);
+      expect(response.body.data.filtered).toBe(2);
+      expect(response.body.data.query).toEqual({
+        q: 'team',
+        status: 'pending'
+      });
+
+      // Both pending todos that contain "team"
+      const titles = response.body.data.todos.map((todo: any) => todo.title);
+      expect(titles).toEqual(expect.arrayContaining([
+        'Meeting with team',
+        'Team standup'
+      ]));
+      
+      response.body.data.todos.forEach((todo: any) => {
+        expect(todo.completed).toBe(false);
+      });
+    });
+
+    it('should handle date range filtering', async () => {
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+
+      const response = await request(app)
+        .get(`/api/todos?created_after=${oneHourAgo.toISOString()}&created_before=${oneHourLater.toISOString()}`)
+        .expect(200);
+
+      expect(response.body.data.todos).toHaveLength(4);
+      expect(response.body.data.filtered).toBe(4);
+      expect(response.body.data.query.created_after).toBe(oneHourAgo.toISOString());
+      expect(response.body.data.query.created_before).toBe(oneHourLater.toISOString());
+    });
+
+    it('should apply pagination to filtered results', async () => {
+      const response = await request(app)
+        .get('/api/todos?status=all&page=1&limit=2')
+        .expect(200);
+
+      expect(response.body.data.todos).toHaveLength(2);
+      expect(response.body.data.filtered).toBe(4);
+      expect(response.body.data.total).toBe(4);
+      expect(response.body.data.page).toBe(1);
+      expect(response.body.data.limit).toBe(2);
+    });
+
+    it('should return empty results when no matches', async () => {
+      const response = await request(app)
+        .get('/api/todos?q=nonexistent')
+        .expect(200);
+
+      expect(response.body.data.todos).toHaveLength(0);
+      expect(response.body.data.filtered).toBe(0);
+      expect(response.body.data.total).toBe(4);
+      expect(response.body.data.query.q).toBe('nonexistent');
+    });
+
+    it('should validate search query parameters', async () => {
+      // Test query too long
+      const longQuery = 'a'.repeat(101);
+      await request(app)
+        .get(`/api/todos?q=${longQuery}`)
+        .expect(400);
+
+      // Test invalid status
+      await request(app)
+        .get('/api/todos?status=invalid')
+        .expect(400);
+
+      // Test invalid date format
+      await request(app)
+        .get('/api/todos?created_after=invalid-date')
+        .expect(400);
+    });
+
+    it('should validate date range logic', async () => {
+      // created_after must be before created_before
+      await request(app)
+        .get('/api/todos?created_after=2024-12-31T00:00:00.000Z&created_before=2024-01-01T00:00:00.000Z')
+        .expect(400);
+    });
+
+    it('should handle special characters in search safely', async () => {
+      // Test that dangerous characters are rejected
+      await request(app)
+        .get('/api/todos?q=<script>alert("xss")</script>')
+        .expect(400);
+    });
+
+    it('should allow valid special characters in search', async () => {
+      const response = await request(app)
+        .get('/api/todos?q=API')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.query.q).toBe('API');
+    });
+
+    it('should maintain backward compatibility for basic requests', async () => {
+      // Request without search/filter params should work exactly as before
+      const response = await request(app)
+        .get('/api/todos?page=1&limit=10')
+        .expect(200);
+
+      expect(response.body.data.todos).toHaveLength(4);
+      expect(response.body.data.total).toBe(4);
+      expect(response.body.data.page).toBe(1);
+      expect(response.body.data.limit).toBe(10);
+      // Should not have search metadata for backward compatibility
+      expect(response.body.data.filtered).toBeUndefined();
+      expect(response.body.data.query).toBeUndefined();
+    });
+
+    it('should perform case-insensitive search', async () => {
+      const response = await request(app)
+        .get('/api/todos?q=TEAM')
+        .expect(200);
+
+      expect(response.body.data.todos).toHaveLength(2);
+      expect(response.body.data.query.q).toBe('TEAM');
+    });
+
+    it('should handle multi-word search queries', async () => {
+      const response = await request(app)
+        .get('/api/todos?q=development team')
+        .expect(200);
+
+      expect(response.body.data.todos).toHaveLength(1);
+      expect(response.body.data.todos[0].title).toBe('Team standup');
+    });
+  });
 });

@@ -46,6 +46,64 @@ export const validatePagination = [
     .withMessage('Limit must be between 1 and 100')
 ];
 
+export const validateSearch = [
+  query('q')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Search query must be between 1 and 100 characters')
+    .matches(/^[a-zA-Z0-9\s\-_.,!?#@]*$/)
+    .withMessage('Search query contains invalid characters'),
+  query('status')
+    .optional()
+    .isIn(['completed', 'pending', 'all'])
+    .withMessage('Status must be one of: completed, pending, all'),
+  query('created_after')
+    .optional()
+    .isISO8601({ strict: true })
+    .withMessage('created_after must be a valid ISO 8601 date'),
+  query('created_before')
+    .optional()
+    .isISO8601({ strict: true })
+    .withMessage('created_before must be a valid ISO 8601 date'),
+  query('updated_after')
+    .optional()
+    .isISO8601({ strict: true })
+    .withMessage('updated_after must be a valid ISO 8601 date'),
+  query('updated_before')
+    .optional()
+    .isISO8601({ strict: true })
+    .withMessage('updated_before must be a valid ISO 8601 date'),
+  // Custom validator for date range logic
+  query()
+    .custom((value, { req }) => {
+      const createdAfter = req.query.created_after;
+      const createdBefore = req.query.created_before;
+      const updatedAfter = req.query.updated_after;
+      const updatedBefore = req.query.updated_before;
+
+      // Validate created date range
+      if (createdAfter && createdBefore) {
+        const after = new Date(createdAfter as string);
+        const before = new Date(createdBefore as string);
+        if (after >= before) {
+          throw new Error('created_after must be before created_before');
+        }
+      }
+
+      // Validate updated date range
+      if (updatedAfter && updatedBefore) {
+        const after = new Date(updatedAfter as string);
+        const before = new Date(updatedBefore as string);
+        if (after >= before) {
+          throw new Error('updated_after must be before updated_before');
+        }
+      }
+
+      return true;
+    })
+];
+
 export const handleValidationErrors = (
   req: Request,
   res: Response<ApiResponse<null>>,

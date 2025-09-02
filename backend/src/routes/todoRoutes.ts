@@ -3,16 +3,18 @@ import { todoController } from '../controllers/todoController.js';
 import { 
   validateCreateTodo, 
   validateUpdateTodo, 
-  validatePagination, 
+  validatePagination,
+  validateSearch,
   handleValidationErrors 
 } from '../middleware/validation.js';
 
 const router = Router();
 
-// GET /api/todos - Get all todos with pagination
+// GET /api/todos - Get all todos with pagination and search/filter
 router.get(
   '/',
   validatePagination,
+  validateSearch,
   handleValidationErrors,
   todoController.getAllTodos.bind(todoController)
 );

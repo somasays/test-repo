@@ -70,9 +70,9 @@ describe('TodoModel', () => {
 
     it('should return all todos sorted by createdAt (newest first)', async () => {
       const todo1 = await todoModel.create({ title: 'Todo 1' });
-      await new Promise(resolve => setTimeout(resolve, 1)); // Ensure different timestamps
+      await new Promise(resolve => setTimeout(resolve, 10)); // Ensure different timestamps
       const todo2 = await todoModel.create({ title: 'Todo 2' });
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise(resolve => setTimeout(resolve, 10));
       const todo3 = await todoModel.create({ title: 'Todo 3' });
 
       const result = await todoModel.findAll();

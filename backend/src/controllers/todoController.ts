@@ -10,21 +10,37 @@ import {
   UpdateTodoRequest, 
   ApiResponse, 
   TodoResponse, 
-  TodoListResponse 
+  TodoListResponse,
+  SearchTodoListResponse 
 } from '../types/todo.js';
 import { createNotFoundError } from '../utils/appError.js';
 
 export class TodoController {
   async getAllTodos(
     req: PaginatedRequest,
-    res: TypedResponse<ApiResponse<TodoListResponse>>,
+    res: TypedResponse<ApiResponse<TodoListResponse | SearchTodoListResponse>>,
     next: NextFunction
   ): Promise<void> {
     try {
       const page = parseInt(String(req.query.page)) || 1;
       const limit = parseInt(String(req.query.limit)) || 10;
 
-      const result = await todoService.getAllTodos(page, limit);
+      // Check if search/filter parameters are provided
+      const hasSearchOrFilter = req.query.q || 
+                               req.query.status !== undefined ||
+                               req.query.created_after ||
+                               req.query.created_before ||
+                               req.query.updated_after ||
+                               req.query.updated_before;
+      
+      let result: TodoListResponse | SearchTodoListResponse;
+      if (hasSearchOrFilter) {
+        // Use search and filter functionality
+        result = await todoService.searchAndFilterTodos(req.query, page, limit);
+      } else {
+        // Use existing basic pagination
+        result = await todoService.getAllTodos(page, limit);
+      }
       
       res.status(200).json({
         success: true,
