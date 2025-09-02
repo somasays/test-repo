@@ -21,8 +21,8 @@ export class TodoController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+      const page = parseInt(String(req.query.page)) || 1;
+      const limit = parseInt(String(req.query.limit)) || 10;
 
       const result = await todoService.getAllTodos(page, limit);
       
@@ -118,7 +118,7 @@ export class TodoController {
   }
 
   async deleteCompletedTodos(
-    req: TypedRequest,
+    _req: TypedRequest,
     res: TypedResponse<ApiResponse<{ deletedCount: number }>>,
     next: NextFunction
   ): Promise<void> {
@@ -136,7 +136,7 @@ export class TodoController {
   }
 
   async getTodoStats(
-    req: TypedRequest,
+    _req: TypedRequest,
     res: TypedResponse<ApiResponse<{ total: number; completed: number; pending: number }>>,
     next: NextFunction
   ): Promise<void> {
@@ -154,7 +154,7 @@ export class TodoController {
   }
 
   async markAllCompleted(
-    req: TypedRequest,
+    _req: TypedRequest,
     res: TypedResponse<ApiResponse<{ updatedCount: number }>>,
     next: NextFunction
   ): Promise<void> {

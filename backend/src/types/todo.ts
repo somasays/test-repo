@@ -1,7 +1,7 @@
 export interface Todo {
   id: string;
   title: string;
-  description?: string;
+  description?: string | undefined;
   completed: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -21,7 +21,7 @@ export interface UpdateTodoRequest {
 export interface TodoResponse {
   id: string;
   title: string;
-  description?: string;
+  description?: string | undefined;
   completed: boolean;
   createdAt: string;
   updatedAt: string;

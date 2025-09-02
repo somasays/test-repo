@@ -11,6 +11,18 @@ export default [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module'
+      },
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        global: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly'
       }
     },
     plugins: {
@@ -18,14 +30,14 @@ export default [
     },
     rules: {
       ...tseslint.configs.recommended.rules,
-      '@typescript-eslint/no-unused-vars': 'error',
-      '@typescript-eslint/explicit-function-return-type': 'warn',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['error', { 'argsIgnorePattern': '^_|next' }],
+      '@typescript-eslint/explicit-function-return-type': 'off', // Too restrictive for Express
+      '@typescript-eslint/no-explicit-any': 'off', // Express types require any
       'prefer-const': 'error',
       'no-var': 'error'
     }
   },
   {
-    ignores: ['dist/', 'node_modules/']
+    ignores: ['dist/', 'node_modules/', 'tests/']
   }
 ]

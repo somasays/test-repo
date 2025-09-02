@@ -6,7 +6,7 @@ export const errorHandler = (
   err: Error,
   req: Request,
   res: Response<ApiResponse<null>>,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   // Log error for debugging
   console.error('Error:', {
@@ -46,7 +46,7 @@ export const errorHandler = (
 
 export const notFoundHandler = (
   req: Request,
-  res: Response<ApiResponse<null>>,
+  _res: Response<ApiResponse<null>>,
   next: NextFunction
 ): void => {
   const error = new AppError(`Route ${req.originalUrl} not found`, 404);
