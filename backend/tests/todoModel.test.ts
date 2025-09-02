@@ -85,31 +85,39 @@ describe('TodoModel', () => {
     });
 
     it('should handle pagination correctly', async () => {
-      // Create 15 todos
+      // Create 15 todos with explicit timestamps to ensure order
       const createdTodos = [];
       for (let i = 1; i <= 15; i++) {
         const todo = await todoModel.create({ title: `Todo ${i}` });
         createdTodos.push(todo);
-        await new Promise(resolve => setTimeout(resolve, 1)); // Ensure different timestamps
+        // Add delay to ensure different timestamps
+        await new Promise(resolve => setTimeout(resolve, 5));
       }
 
-      // Test first page
+      // Test first page (newest first)
       const page1 = await todoModel.findAll(1, 5);
       expect(page1.todos).toHaveLength(5);
       expect(page1.total).toBe(15);
-      expect(page1.todos[0].title).toBe('Todo 15'); // Newest first
+      
+      // Verify descending order by creation time
+      const page1Titles = page1.todos.map(todo => todo.title);
+      expect(page1Titles).toEqual(['Todo 15', 'Todo 14', 'Todo 13', 'Todo 12', 'Todo 11']);
 
       // Test second page
       const page2 = await todoModel.findAll(2, 5);
       expect(page2.todos).toHaveLength(5);
       expect(page2.total).toBe(15);
-      expect(page2.todos[0].title).toBe('Todo 10');
+      
+      const page2Titles = page2.todos.map(todo => todo.title);
+      expect(page2Titles).toEqual(['Todo 10', 'Todo 9', 'Todo 8', 'Todo 7', 'Todo 6']);
 
       // Test last page
       const page3 = await todoModel.findAll(3, 5);
       expect(page3.todos).toHaveLength(5);
       expect(page3.total).toBe(15);
-      expect(page3.todos[0].title).toBe('Todo 5');
+      
+      const page3Titles = page3.todos.map(todo => todo.title);
+      expect(page3Titles).toEqual(['Todo 5', 'Todo 4', 'Todo 3', 'Todo 2', 'Todo 1']);
     });
 
     it('should handle page beyond available data', async () => {
