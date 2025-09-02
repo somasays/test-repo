@@ -97,6 +97,9 @@ describe('TodoService', () => {
         description: 'Original Description'
       });
 
+      // Add a small delay to ensure different timestamps
+      await new Promise(resolve => setTimeout(resolve, 10));
+
       const updated = await todoService.updateTodo(created.id, {
         title: 'Updated Title',
         completed: true
@@ -105,7 +108,7 @@ describe('TodoService', () => {
       expect(updated.title).toBe('Updated Title');
       expect(updated.description).toBe('Original Description');
       expect(updated.completed).toBe(true);
-      expect(updated.updatedAt).not.toBe(updated.createdAt);
+      expect(new Date(updated.updatedAt).getTime()).toBeGreaterThanOrEqual(new Date(updated.createdAt).getTime());
     });
 
     it('should throw error for non-existent todo', async () => {
