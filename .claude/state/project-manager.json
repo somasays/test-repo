@@ -1,0 +1,21 @@
+{
+  "agent_role": "project-manager",
+  "session_date": "2024-01-01",
+  "active_sprint": null,
+  "sprint_goal": null,
+  "issues_created_today": [],
+  "assignments_made": {},
+  "blocked_issues": [],
+  "team_capacity": {
+    "swe-1": 0,
+    "swe-2": 0,
+    "swe-3": 0
+  },
+  "next_priorities": [
+    "Review project backlog",
+    "Assess team capacity",
+    "Create initial sprint plan"
+  ],
+  "project_phase": "initialization",
+  "notes": "New project - need to establish initial workflow"
+}

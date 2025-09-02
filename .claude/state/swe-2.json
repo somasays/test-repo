@@ -1,0 +1,28 @@
+{
+  "agent_role": "swe-2",
+  "session_date": "2024-01-01",
+  "current_issue": null,
+  "active_branch": null,
+  "issues_assigned": [],
+  "issues_completed": [],
+  "blocked_items": [],
+  "current_progress": {
+    "implementation_plan": null,
+    "tests_written": 0,
+    "tests_passed": 0,
+    "code_coverage": 0
+  },
+  "pr_status": {
+    "open_prs": [],
+    "pending_reviews": []
+  },
+  "skill_development": {
+    "areas_learning": ["Advanced Testing", "Performance Optimization"],
+    "recent_feedback": []
+  },
+  "next_actions": [
+    "Check for assigned issues",
+    "Review project documentation",
+    "Set up development environment"
+  ]
+}

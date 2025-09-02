@@ -1,0 +1,23 @@
+{
+  "agent_role": "principal-engineer",
+  "session_date": "2024-01-01",
+  "prs_reviewed_today": [],
+  "plans_reviewed": {
+    "approved": [],
+    "revision_requested": [],
+    "iteration_count": {}
+  },
+  "technical_decisions": [],
+  "blocked_prs": [],
+  "architecture_concerns": [],
+  "mentorship_notes": {
+    "swe-1": "New team member - focus on code quality fundamentals",
+    "swe-2": "Developing well - good testing practices",
+    "swe-3": "Strong performer - ready for complex tasks"
+  },
+  "quality_metrics": {
+    "pr_approval_rate": 0,
+    "architecture_consistency": 100,
+    "technical_debt_ratio": 0
+  }
+}
