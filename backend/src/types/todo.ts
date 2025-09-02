@@ -45,3 +45,12 @@ export interface TodoListResponse {
   page: number;
   limit: number;
 }
+
+export interface SearchTodoListResponse {
+  todos: TodoResponse[];
+  total: number;
+  filtered?: number;    // Total after filtering, before pagination
+  page: number;
+  limit: number;
+  query?: Record<string, any>;  // Echo back search parameters
+}

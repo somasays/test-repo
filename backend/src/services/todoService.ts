@@ -4,10 +4,18 @@ import {
   CreateTodoRequest, 
   UpdateTodoRequest, 
   TodoResponse, 
-  TodoListResponse 
+  TodoListResponse,
+  SearchTodoListResponse
 } from '../types/todo.js';
+import { SearchEngine } from './search/searchEngine.js';
+import { FilterEngine } from './search/filterEngine.js';
+import { QueryParser } from './search/queryParser.js';
 
 export class TodoService {
+  private searchEngine = new SearchEngine();
+  private filterEngine = new FilterEngine();
+  private queryParser = new QueryParser();
+
   private mapTodoToResponse(todo: Todo): TodoResponse {
     return {
       id: todo.id,
@@ -76,6 +84,70 @@ export class TodoService {
 
   async seedTodos(): Promise<void> {
     await todoModel.seed();
+  }
+
+  async searchAndFilterTodos(
+    queryParams: Record<string, any>,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<SearchTodoListResponse> {
+    // Parse and validate query
+    const parsedQuery = this.queryParser.parse(queryParams);
+    
+    // Get all todos from model
+    const { todos, total } = await todoModel.findAll();
+    
+    let filteredTodos = todos;
+    
+    // Apply text search if query provided
+    if (parsedQuery.searchQuery) {
+      filteredTodos = this.searchEngine.search(
+        filteredTodos, 
+        parsedQuery.searchQuery,
+        { fields: ['title', 'description'] }
+      );
+    }
+    
+    // Apply filters
+    filteredTodos = this.filterEngine.filter(filteredTodos, parsedQuery.filters);
+    
+    // Calculate totals
+    const filtered = filteredTodos.length;
+    
+    // Apply pagination to filtered results
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedTodos = filteredTodos.slice(startIndex, endIndex);
+    
+    // Build query object for response (only include non-empty values)
+    const responseQuery: Record<string, any> = {};
+    if (parsedQuery.searchQuery) {
+      responseQuery.q = parsedQuery.searchQuery;
+    }
+    if (parsedQuery.filters.status && parsedQuery.filters.status !== 'all') {
+      responseQuery.status = parsedQuery.filters.status;
+    }
+    if (parsedQuery.filters.createdAfter) {
+      responseQuery.created_after = parsedQuery.filters.createdAfter.toISOString();
+    }
+    if (parsedQuery.filters.createdBefore) {
+      responseQuery.created_before = parsedQuery.filters.createdBefore.toISOString();
+    }
+    if (parsedQuery.filters.updatedAfter) {
+      responseQuery.updated_after = parsedQuery.filters.updatedAfter.toISOString();
+    }
+    if (parsedQuery.filters.updatedBefore) {
+      responseQuery.updated_before = parsedQuery.filters.updatedBefore.toISOString();
+    }
+
+    return {
+      todos: paginatedTodos.map(this.mapTodoToResponse),
+      total,
+      filtered,
+      page,
+      limit,
+      query: Object.keys(responseQuery).length > 0 ? responseQuery : {}
+    };
   }
 }
 

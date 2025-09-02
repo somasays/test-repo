@@ -14,7 +14,8 @@ vi.mock('../src/services/todoService.js', () => ({
     deleteTodo: vi.fn(),
     deleteCompletedTodos: vi.fn(),
     getTodoStats: vi.fn(),
-    markAllCompleted: vi.fn()
+    markAllCompleted: vi.fn(),
+    searchAndFilterTodos: vi.fn()
   }
 }));
 
@@ -616,6 +617,164 @@ describe('TodoController', () => {
 
       expect(todoService.createTodo).toHaveBeenCalledWith(todoData);
       expect(mockStatus).toHaveBeenCalledWith(201);
+    });
+  });
+
+  describe('getAllTodos with search and filter', () => {
+    it('should call searchAndFilterTodos when search parameters are provided', async () => {
+      req.query = { q: 'meeting', status: 'pending', page: '1', limit: '10' };
+      
+      const mockSearchResult = {
+        todos: [
+          {
+            id: '1',
+            title: 'Meeting with team',
+            description: 'Weekly sync',
+            completed: false,
+            createdAt: '2024-01-01',
+            updatedAt: '2024-01-01'
+          }
+        ],
+        total: 5,
+        filtered: 1,
+        page: 1,
+        limit: 10,
+        query: { q: 'meeting', status: 'pending' }
+      };
+
+      (todoService.searchAndFilterTodos as any).mockResolvedValue(mockSearchResult);
+      
+      await todoController.getAllTodos(req as any, res as any, next);
+      
+      expect(todoService.searchAndFilterTodos).toHaveBeenCalledWith(req.query, 1, 10);
+      expect(mockStatus).toHaveBeenCalledWith(200);
+      expect(mockJson).toHaveBeenCalledWith({
+        success: true,
+        data: mockSearchResult,
+        message: 'Todos retrieved successfully'
+      });
+    });
+
+    it('should call searchAndFilterTodos when status filter is provided', async () => {
+      req.query = { status: 'completed' };
+      
+      const mockSearchResult = {
+        todos: [],
+        total: 5,
+        filtered: 2,
+        page: 1,
+        limit: 10,
+        query: { status: 'completed' }
+      };
+
+      (todoService.searchAndFilterTodos as any).mockResolvedValue(mockSearchResult);
+      
+      await todoController.getAllTodos(req as any, res as any, next);
+      
+      expect(todoService.searchAndFilterTodos).toHaveBeenCalledWith(req.query, 1, 10);
+      expect(todoService.getAllTodos).not.toHaveBeenCalled();
+    });
+
+    it('should call searchAndFilterTodos when date filters are provided', async () => {
+      req.query = { 
+        created_after: '2024-01-01T00:00:00.000Z',
+        created_before: '2024-12-31T23:59:59.999Z'
+      };
+      
+      const mockSearchResult = {
+        todos: [],
+        total: 5,
+        filtered: 3,
+        page: 1,
+        limit: 10,
+        query: { 
+          created_after: '2024-01-01T00:00:00.000Z',
+          created_before: '2024-12-31T23:59:59.999Z'
+        }
+      };
+
+      (todoService.searchAndFilterTodos as any).mockResolvedValue(mockSearchResult);
+      
+      await todoController.getAllTodos(req as any, res as any, next);
+      
+      expect(todoService.searchAndFilterTodos).toHaveBeenCalledWith(req.query, 1, 10);
+    });
+
+    it('should call regular getAllTodos when no search/filter parameters are provided', async () => {
+      req.query = { page: '2', limit: '5' };
+      
+      const mockResult = {
+        todos: [],
+        total: 5,
+        page: 2,
+        limit: 5
+      };
+
+      (todoService.getAllTodos as any).mockResolvedValue(mockResult);
+      
+      await todoController.getAllTodos(req as any, res as any, next);
+      
+      expect(todoService.getAllTodos).toHaveBeenCalledWith(2, 5);
+      expect(todoService.searchAndFilterTodos).not.toHaveBeenCalled();
+    });
+
+    it('should handle combined search and filter parameters', async () => {
+      req.query = { 
+        q: 'project',
+        status: 'pending',
+        created_after: '2024-01-01T00:00:00.000Z',
+        page: '2',
+        limit: '15'
+      };
+      
+      const mockSearchResult = {
+        todos: [],
+        total: 10,
+        filtered: 3,
+        page: 2,
+        limit: 15,
+        query: { 
+          q: 'project',
+          status: 'pending',
+          created_after: '2024-01-01T00:00:00.000Z'
+        }
+      };
+
+      (todoService.searchAndFilterTodos as any).mockResolvedValue(mockSearchResult);
+      
+      await todoController.getAllTodos(req as any, res as any, next);
+      
+      expect(todoService.searchAndFilterTodos).toHaveBeenCalledWith(req.query, 2, 15);
+    });
+
+    it('should handle search/filter errors properly', async () => {
+      req.query = { q: 'meeting' };
+      const error = new AppError('Search failed', 500);
+      
+      (todoService.searchAndFilterTodos as any).mockRejectedValue(error);
+      
+      await todoController.getAllTodos(req as any, res as any, next);
+      
+      expect(next).toHaveBeenCalledWith(error);
+    });
+
+    it('should detect search parameters correctly with undefined status', async () => {
+      req.query = { status: undefined, q: 'meeting' };
+      
+      const mockSearchResult = {
+        todos: [],
+        total: 5,
+        filtered: 1,
+        page: 1,
+        limit: 10,
+        query: { q: 'meeting' }
+      };
+
+      (todoService.searchAndFilterTodos as any).mockResolvedValue(mockSearchResult);
+      
+      await todoController.getAllTodos(req as any, res as any, next);
+      
+      expect(todoService.searchAndFilterTodos).toHaveBeenCalled();
     });
   });
 });
