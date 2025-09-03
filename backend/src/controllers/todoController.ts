@@ -28,6 +28,7 @@ export class TodoController {
       // Check if search/filter parameters are provided
       const hasSearchOrFilter = req.query.q || 
                                req.query.status !== undefined ||
+                               req.query.priority !== undefined ||
                                req.query.created_after ||
                                req.query.created_before ||
                                req.query.updated_after ||

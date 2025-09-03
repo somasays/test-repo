@@ -777,4 +777,366 @@ describe('TodoController', () => {
       expect(todoService.searchAndFilterTodos).toHaveBeenCalled();
     });
   });
+
+  describe('Priority Support in API', () => {
+    describe('createTodo with priority', () => {
+      it('should create todo with HIGH priority', async () => {
+        const todoData = { 
+          title: 'High priority task',
+          description: 'Very important task',
+          priority: 'HIGH' as const
+        };
+        
+        const mockCreatedTodo = {
+          id: '1',
+          title: 'High priority task',
+          description: 'Very important task',
+          completed: false,
+          priority: 'HIGH' as const,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z'
+        };
+
+        (todoService.createTodo as any).mockResolvedValue(mockCreatedTodo);
+        req.body = todoData;
+
+        await todoController.createTodo(req as any, res as any, next);
+
+        expect(todoService.createTodo).toHaveBeenCalledWith(todoData);
+        expect(mockStatus).toHaveBeenCalledWith(201);
+        expect(mockJson).toHaveBeenCalledWith({
+          success: true,
+          data: mockCreatedTodo,
+          message: 'Todo created successfully'
+        });
+      });
+
+      it('should create todo with MEDIUM priority by default', async () => {
+        const todoData = { 
+          title: 'Default priority task',
+          description: 'Task without specified priority'
+        };
+        
+        const mockCreatedTodo = {
+          id: '2',
+          title: 'Default priority task',
+          description: 'Task without specified priority',
+          completed: false,
+          priority: 'MEDIUM' as const,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z'
+        };
+
+        (todoService.createTodo as any).mockResolvedValue(mockCreatedTodo);
+        req.body = todoData;
+
+        await todoController.createTodo(req as any, res as any, next);
+
+        expect(todoService.createTodo).toHaveBeenCalledWith(todoData);
+        expect(mockStatus).toHaveBeenCalledWith(201);
+      });
+
+      it('should create todo with specified LOW priority', async () => {
+        const todoData = { 
+          title: 'Low priority task',
+          priority: 'LOW' as const
+        };
+        
+        const mockCreatedTodo = {
+          id: '3',
+          title: 'Low priority task',
+          completed: false,
+          priority: 'LOW' as const,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z'
+        };
+
+        (todoService.createTodo as any).mockResolvedValue(mockCreatedTodo);
+        req.body = todoData;
+
+        await todoController.createTodo(req as any, res as any, next);
+
+        expect(todoService.createTodo).toHaveBeenCalledWith(todoData);
+        expect(mockStatus).toHaveBeenCalledWith(201);
+      });
+    });
+
+    describe('updateTodo with priority', () => {
+      it('should update todo priority from MEDIUM to HIGH', async () => {
+        const updateData = { 
+          priority: 'HIGH' as const 
+        };
+        
+        const mockUpdatedTodo = {
+          id: '1',
+          title: 'Updated task',
+          description: 'Task description',
+          completed: false,
+          priority: 'HIGH' as const,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T12:00:00.000Z'
+        };
+
+        (todoService.updateTodo as any).mockResolvedValue(mockUpdatedTodo);
+        req.params = { id: '1' };
+        req.body = updateData;
+
+        await todoController.updateTodo(req as any, res as any, next);
+
+        expect(todoService.updateTodo).toHaveBeenCalledWith('1', updateData);
+        expect(mockStatus).toHaveBeenCalledWith(200);
+        expect(mockJson).toHaveBeenCalledWith({
+          success: true,
+          data: mockUpdatedTodo,
+          message: 'Todo updated successfully'
+        });
+      });
+
+      it('should update todo priority along with other fields', async () => {
+        const updateData = { 
+          title: 'Updated high priority task',
+          completed: true,
+          priority: 'HIGH' as const 
+        };
+        
+        const mockUpdatedTodo = {
+          id: '2',
+          title: 'Updated high priority task',
+          description: 'Task description',
+          completed: true,
+          priority: 'HIGH' as const,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T12:00:00.000Z'
+        };
+
+        (todoService.updateTodo as any).mockResolvedValue(mockUpdatedTodo);
+        req.params = { id: '2' };
+        req.body = updateData;
+
+        await todoController.updateTodo(req as any, res as any, next);
+
+        expect(todoService.updateTodo).toHaveBeenCalledWith('2', updateData);
+        expect(mockStatus).toHaveBeenCalledWith(200);
+      });
+    });
+
+    describe('getAllTodos with priority filtering', () => {
+      it('should filter todos by HIGH priority', async () => {
+        req.query = { priority: 'HIGH' };
+        
+        const mockSearchResult = {
+          todos: [
+            {
+              id: '1',
+              title: 'High priority task 1',
+              description: 'Important task',
+              completed: false,
+              priority: 'HIGH' as const,
+              createdAt: '2024-01-01T00:00:00.000Z',
+              updatedAt: '2024-01-01T00:00:00.000Z'
+            },
+            {
+              id: '2',
+              title: 'High priority task 2',
+              description: 'Another important task',
+              completed: true,
+              priority: 'HIGH' as const,
+              createdAt: '2024-01-01T01:00:00.000Z',
+              updatedAt: '2024-01-01T01:30:00.000Z'
+            }
+          ],
+          total: 10,
+          filtered: 2,
+          page: 1,
+          limit: 10,
+          query: { priority: 'HIGH' }
+        };
+
+        (todoService.searchAndFilterTodos as any).mockResolvedValue(mockSearchResult);
+        
+        await todoController.getAllTodos(req as any, res as any, next);
+        
+        expect(todoService.searchAndFilterTodos).toHaveBeenCalledWith(req.query, 1, 10);
+        expect(mockStatus).toHaveBeenCalledWith(200);
+        expect(mockJson).toHaveBeenCalledWith({
+          success: true,
+          data: mockSearchResult,
+          message: 'Todos retrieved successfully'
+        });
+      });
+
+      it('should filter todos by MEDIUM priority', async () => {
+        req.query = { priority: 'MEDIUM' };
+        
+        const mockSearchResult = {
+          todos: [
+            {
+              id: '3',
+              title: 'Medium priority task',
+              completed: false,
+              priority: 'MEDIUM' as const,
+              createdAt: '2024-01-01T02:00:00.000Z',
+              updatedAt: '2024-01-01T02:00:00.000Z'
+            }
+          ],
+          total: 10,
+          filtered: 1,
+          page: 1,
+          limit: 10,
+          query: { priority: 'MEDIUM' }
+        };
+
+        (todoService.searchAndFilterTodos as any).mockResolvedValue(mockSearchResult);
+        
+        await todoController.getAllTodos(req as any, res as any, next);
+        
+        expect(todoService.searchAndFilterTodos).toHaveBeenCalledWith(req.query, 1, 10);
+      });
+
+      it('should combine priority filter with status filter', async () => {
+        req.query = { priority: 'HIGH', status: 'pending' };
+        
+        const mockSearchResult = {
+          todos: [
+            {
+              id: '1',
+              title: 'High priority pending task',
+              completed: false,
+              priority: 'HIGH' as const,
+              createdAt: '2024-01-01T00:00:00.000Z',
+              updatedAt: '2024-01-01T00:00:00.000Z'
+            }
+          ],
+          total: 10,
+          filtered: 1,
+          page: 1,
+          limit: 10,
+          query: { priority: 'HIGH', status: 'pending' }
+        };
+
+        (todoService.searchAndFilterTodos as any).mockResolvedValue(mockSearchResult);
+        
+        await todoController.getAllTodos(req as any, res as any, next);
+        
+        expect(todoService.searchAndFilterTodos).toHaveBeenCalledWith(req.query, 1, 10);
+      });
+
+      it('should combine priority filter with text search', async () => {
+        req.query = { priority: 'LOW', q: 'cleanup' };
+        
+        const mockSearchResult = {
+          todos: [
+            {
+              id: '4',
+              title: 'Cleanup old files',
+              description: 'Remove unnecessary files',
+              completed: false,
+              priority: 'LOW' as const,
+              createdAt: '2024-01-01T03:00:00.000Z',
+              updatedAt: '2024-01-01T03:00:00.000Z'
+            }
+          ],
+          total: 10,
+          filtered: 1,
+          page: 1,
+          limit: 10,
+          query: { priority: 'LOW', q: 'cleanup' }
+        };
+
+        (todoService.searchAndFilterTodos as any).mockResolvedValue(mockSearchResult);
+        
+        await todoController.getAllTodos(req as any, res as any, next);
+        
+        expect(todoService.searchAndFilterTodos).toHaveBeenCalledWith(req.query, 1, 10);
+      });
+
+      it('should combine priority with all other filters', async () => {
+        req.query = { 
+          priority: 'HIGH',
+          status: 'completed',
+          q: 'project',
+          created_after: '2024-01-01T00:00:00.000Z',
+          page: '2',
+          limit: '5'
+        };
+        
+        const mockSearchResult = {
+          todos: [],
+          total: 15,
+          filtered: 0,
+          page: 2,
+          limit: 5,
+          query: { 
+            priority: 'HIGH',
+            status: 'completed',
+            q: 'project',
+            created_after: '2024-01-01T00:00:00.000Z'
+          }
+        };
+
+        (todoService.searchAndFilterTodos as any).mockResolvedValue(mockSearchResult);
+        
+        await todoController.getAllTodos(req as any, res as any, next);
+        
+        expect(todoService.searchAndFilterTodos).toHaveBeenCalledWith(req.query, 2, 5);
+      });
+    });
+
+    describe('getTodoById with priority', () => {
+      it('should return todo with priority information', async () => {
+        const mockTodo = {
+          id: '1',
+          title: 'High priority task',
+          description: 'Very important',
+          completed: false,
+          priority: 'HIGH' as const,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z'
+        };
+
+        (todoService.getTodoById as any).mockResolvedValue(mockTodo);
+        req.params = { id: '1' };
+
+        await todoController.getTodoById(req as any, res as any, next);
+
+        expect(todoService.getTodoById).toHaveBeenCalledWith('1');
+        expect(mockStatus).toHaveBeenCalledWith(200);
+        expect(mockJson).toHaveBeenCalledWith({
+          success: true,
+          data: mockTodo,
+          message: 'Todo retrieved successfully'
+        });
+      });
+    });
+
+    describe('priority validation scenarios', () => {
+      it('should handle creation with invalid priority gracefully', async () => {
+        // This would typically be caught by validation middleware
+        // but testing the flow if invalid data reaches the controller
+        const todoData = { 
+          title: 'Task with invalid priority',
+          priority: 'URGENT' as any // Invalid priority
+        };
+
+        // Mock service would receive this and either:
+        // 1. Reject it (if validation is in service)
+        // 2. Process it (if validation is only in middleware)
+        const mockCreatedTodo = {
+          id: '1',
+          title: 'Task with invalid priority',
+          completed: false,
+          priority: 'MEDIUM' as const, // Service might default to MEDIUM
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z'
+        };
+
+        (todoService.createTodo as any).mockResolvedValue(mockCreatedTodo);
+        req.body = todoData;
+
+        await todoController.createTodo(req as any, res as any, next);
+
+        expect(todoService.createTodo).toHaveBeenCalledWith(todoData);
+      });
+    });
+  });
 });

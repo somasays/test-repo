@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Todo, CreateTodoRequest, UpdateTodoRequest } from '../types/todo.js';
+import { Todo, CreateTodoRequest, UpdateTodoRequest, comparePriorities } from '../types/todo.js';
 import { createNotFoundError } from '../utils/appError.js';
 
 class TodoModel {
@@ -7,7 +7,15 @@ class TodoModel {
 
   async findAll(page: number = 1, limit: number = 10): Promise<{ todos: Todo[]; total: number }> {
     const allTodos = Array.from(this.todos.values())
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .sort((a, b) => {
+        // First sort by priority (HIGH > MEDIUM > LOW)
+        const priorityComparison = comparePriorities(a.priority, b.priority);
+        if (priorityComparison !== 0) {
+          return priorityComparison;
+        }
+        // Then sort by creation date (newer first)
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      });
     
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
@@ -30,6 +38,7 @@ class TodoModel {
       title: todoData.title,
       description: todoData.description,
       completed: false,
+      priority: todoData.priority || 'MEDIUM', // Default to MEDIUM priority
       createdAt: now,
       updatedAt: now
     };
@@ -92,15 +101,18 @@ class TodoModel {
     const sampleTodos = [
       {
         title: 'Learn TypeScript',
-        description: 'Master TypeScript fundamentals and advanced features'
+        description: 'Master TypeScript fundamentals and advanced features',
+        priority: 'MEDIUM' as const
       },
       {
         title: 'Build Todo App',
-        description: 'Create a full-stack todo application with React and Express'
+        description: 'Create a full-stack todo application with React and Express',
+        priority: 'MEDIUM' as const
       },
       {
         title: 'Write Tests',
-        description: 'Add comprehensive test coverage for the application'
+        description: 'Add comprehensive test coverage for the application',
+        priority: 'MEDIUM' as const
       }
     ];
 
