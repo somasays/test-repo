@@ -341,4 +341,209 @@ describe('QueryParser', () => {
       expect(result.filters.status).toBeUndefined();
     });
   });
+
+  describe('Priority Parsing', () => {
+    describe('parse priority parameter', () => {
+      it('should parse HIGH priority parameter', () => {
+        const queryParams = {
+          priority: 'HIGH'
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.filters.priority).toBe('HIGH');
+      });
+
+      it('should parse MEDIUM priority parameter', () => {
+        const queryParams = {
+          priority: 'MEDIUM'
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.filters.priority).toBe('MEDIUM');
+      });
+
+      it('should parse LOW priority parameter', () => {
+        const queryParams = {
+          priority: 'LOW'
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.filters.priority).toBe('LOW');
+      });
+
+      it('should ignore invalid priority parameter', () => {
+        const queryParams = {
+          priority: 'URGENT'
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.filters.priority).toBeUndefined();
+      });
+
+      it('should handle case-sensitive priority values', () => {
+        const queryParams = {
+          priority: 'high' // lowercase should be ignored
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.filters.priority).toBeUndefined();
+      });
+
+      it('should handle array priority values (first element)', () => {
+        const queryParams = {
+          priority: ['HIGH', 'MEDIUM'] // Should take first valid one
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.filters.priority).toBe('HIGH');
+      });
+
+      it('should handle mixed array with invalid priority first', () => {
+        const queryParams = {
+          priority: ['URGENT', 'HIGH'] // Should ignore invalid and take first valid
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.filters.priority).toBeUndefined(); // Should ignore all if first is invalid
+      });
+
+      it('should handle null priority parameter', () => {
+        const queryParams = {
+          priority: null
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.filters.priority).toBeUndefined();
+      });
+
+      it('should handle undefined priority parameter', () => {
+        const queryParams = {
+          priority: undefined
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.filters.priority).toBeUndefined();
+      });
+
+      it('should handle non-string priority parameter', () => {
+        const queryParams = {
+          priority: 123
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.filters.priority).toBeUndefined();
+      });
+    });
+
+    describe('combined parsing with priority', () => {
+      it('should parse priority with status and dates', () => {
+        const queryParams = {
+          priority: 'HIGH',
+          status: 'pending',
+          created_after: '2024-01-01T00:00:00.000Z'
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.filters.priority).toBe('HIGH');
+        expect(result.filters.status).toBe('pending');
+        expect(result.filters.createdAfter).toEqual(new Date('2024-01-01T00:00:00.000Z'));
+      });
+
+      it('should parse priority with search query and pagination', () => {
+        const queryParams = {
+          q: 'urgent task',
+          priority: 'HIGH',
+          page: 2,
+          limit: 20
+        };
+        const result = queryParser.parse(queryParams);
+
+        expect(result.searchQuery).toBe('urgent task');
+        expect(result.filters.priority).toBe('HIGH');
+        expect(result.pagination.page).toBe(2);
+        expect(result.pagination.limit).toBe(20);
+      });
+    });
+
+    describe('priority validation', () => {
+      it('should validate valid priority parameter', () => {
+        const queryParams = {
+          priority: 'HIGH'
+        };
+        const result = queryParser.validate(queryParams);
+
+        expect(result.isValid).toBe(true);
+        expect(result.errors).toBeUndefined();
+      });
+
+      it('should validate all valid priority values', () => {
+        const priorities = ['HIGH', 'MEDIUM', 'LOW'];
+        
+        priorities.forEach(priority => {
+          const queryParams = {
+            priority
+          };
+          const result = queryParser.validate(queryParams);
+
+          expect(result.isValid).toBe(true);
+          expect(result.errors).toBeUndefined();
+        });
+      });
+
+      it('should invalidate invalid priority parameter', () => {
+        const queryParams = {
+          priority: 'URGENT'
+        };
+        const result = queryParser.validate(queryParams);
+
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toContain('Priority must be one of: HIGH, MEDIUM, LOW');
+      });
+
+      it('should invalidate case-insensitive priority values', () => {
+        const queryParams = {
+          priority: 'high'
+        };
+        const result = queryParser.validate(queryParams);
+
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toContain('Priority must be one of: HIGH, MEDIUM, LOW');
+      });
+
+      it('should handle non-string priority in validation', () => {
+        const queryParams = {
+          priority: 123
+        };
+        const result = queryParser.validate(queryParams);
+
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toContain('Priority must be one of: HIGH, MEDIUM, LOW');
+      });
+
+      it('should handle null/undefined priority in validation', () => {
+        const queryParams = {
+          priority: null
+        };
+        const result = queryParser.validate(queryParams);
+
+        expect(result.isValid).toBe(true); // null/undefined should be valid (optional)
+        expect(result.errors).toBeUndefined();
+      });
+
+      it('should collect multiple validation errors including priority', () => {
+        const queryParams = {
+          priority: 'URGENT',
+          status: 'invalid-status',
+          page: -1
+        };
+        const result = queryParser.validate(queryParams);
+
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toContain('Priority must be one of: HIGH, MEDIUM, LOW');
+        expect(result.errors).toContain('Status must be one of: completed, pending, all');
+        expect(result.errors).toContain('Page must be a positive integer');
+        expect(result.errors?.length).toBe(3);
+      });
+    });
+  });
 });

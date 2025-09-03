@@ -107,6 +107,7 @@ describe('Todo Routes Integration Tests', () => {
           title: 'Test Todo',
           description: 'Test Description',
           completed: false,
+          priority: 'MEDIUM', // Default priority
           createdAt: expect.any(String),
           updatedAt: expect.any(String)
         },

@@ -1,4 +1,4 @@
-import { Todo } from '../../types/todo.js';
+import { Todo, Priority } from '../../types/todo.js';
 import { FilterCriteria, ValidationResult } from '../../types/search.js';
 
 export class FilterEngine {
@@ -18,6 +18,11 @@ export class FilterEngine {
     // Apply status filter
     if (criteria.status && criteria.status !== 'all') {
       filteredTodos = this.filterByStatus(filteredTodos, criteria.status);
+    }
+
+    // Apply priority filter
+    if (criteria.priority) {
+      filteredTodos = this.filterByPriority(filteredTodos, criteria.priority);
     }
 
     // Apply created date filters
@@ -87,6 +92,18 @@ export class FilterEngine {
         default:
           return true;
       }
+    });
+  }
+
+  /**
+   * Filter todos by priority
+   * @param todos - Todos to filter
+   * @param priority - Priority to filter by
+   * @returns Filtered todos
+   */
+  private filterByPriority(todos: Todo[], priority: Priority): Todo[] {
+    return todos.filter(todo => {
+      return todo.priority === priority;
     });
   }
 

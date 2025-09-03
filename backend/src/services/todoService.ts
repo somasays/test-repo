@@ -22,6 +22,7 @@ export class TodoService {
       title: todo.title,
       description: todo.description,
       completed: todo.completed,
+      priority: todo.priority,
       createdAt: todo.createdAt.toISOString(),
       updatedAt: todo.updatedAt.toISOString()
     };
@@ -126,6 +127,9 @@ export class TodoService {
     }
     if (parsedQuery.filters.status && parsedQuery.filters.status !== 'all') {
       responseQuery.status = parsedQuery.filters.status;
+    }
+    if (parsedQuery.filters.priority) {
+      responseQuery.priority = parsedQuery.filters.priority;
     }
     if (parsedQuery.filters.createdAfter) {
       responseQuery.created_after = parsedQuery.filters.createdAfter.toISOString();

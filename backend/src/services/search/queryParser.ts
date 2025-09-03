@@ -1,5 +1,5 @@
 import { ParsedQuery, ValidationResult, FilterCriteria } from '../../types/search.js';
-import { PaginationParams } from '../../types/todo.js';
+import { PaginationParams, Priority, isPriority } from '../../types/todo.js';
 
 export class QueryParser {
   /**
@@ -32,6 +32,9 @@ export class QueryParser {
 
     // Validate status
     this.validateStatus(queryParams.status, errors);
+
+    // Validate priority
+    this.validatePriority(queryParams.priority, errors);
 
     // Validate date parameters
     this.validateDateParameters(queryParams, errors);
@@ -77,6 +80,12 @@ export class QueryParser {
     const status = this.parseStatus(queryParams.status);
     if (status) {
       filters.status = status;
+    }
+
+    // Parse priority
+    const priority = this.parsePriority(queryParams.priority);
+    if (priority) {
+      filters.priority = priority;
     }
 
     // Parse date filters
@@ -139,6 +148,22 @@ export class QueryParser {
 
     const validStatuses = ['completed', 'pending', 'all'];
     return validStatuses.includes(statusValue) ? statusValue as 'completed' | 'pending' | 'all' : undefined;
+  }
+
+  /**
+   * Parse priority parameter
+   * @param priority - Priority parameter value
+   * @returns Valid priority or undefined
+   */
+  private parsePriority(priority: any): Priority | undefined {
+    if (!priority) return undefined;
+
+    // Handle array values (take first element)
+    const priorityValue = Array.isArray(priority) ? priority[0] : priority;
+    
+    if (typeof priorityValue !== 'string') return undefined;
+
+    return isPriority(priorityValue) ? priorityValue : undefined;
   }
 
   /**
@@ -216,6 +241,25 @@ export class QueryParser {
     const validStatuses = ['completed', 'pending', 'all'];
     if (!validStatuses.includes(statusValue)) {
       errors.push('Status must be one of: completed, pending, all');
+    }
+  }
+
+  /**
+   * Validate priority parameter
+   * @param priority - Priority to validate
+   * @param errors - Array to collect errors
+   */
+  private validatePriority(priority: any, errors: string[]): void {
+    if (!priority) return;
+
+    const priorityValue = Array.isArray(priority) ? priority[0] : priority;
+    if (typeof priorityValue !== 'string') {
+      errors.push('Priority must be one of: HIGH, MEDIUM, LOW');
+      return;
+    }
+
+    if (!isPriority(priorityValue)) {
+      errors.push('Priority must be one of: HIGH, MEDIUM, LOW');
     }
   }
 

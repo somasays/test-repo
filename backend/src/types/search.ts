@@ -1,10 +1,11 @@
-import { Todo } from './todo.js';
+import { Todo, Priority } from './todo.js';
 import { PaginationParams } from './todo.js';
 
 // Search-related query parameters
 export interface SearchQuery {
   q?: string;
   status?: 'completed' | 'pending' | 'all';
+  priority?: Priority;
   created_after?: string;
   created_before?: string;
   updated_after?: string;
@@ -19,6 +20,7 @@ export interface SearchRequest extends PaginationParams {
 // Filter criteria for internal processing
 export interface FilterCriteria {
   status?: 'completed' | 'pending' | 'all';
+  priority?: Priority;
   createdAfter?: Date;
   createdBefore?: Date;
   updatedAfter?: Date;

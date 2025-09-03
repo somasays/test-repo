@@ -551,4 +551,239 @@ describe('TodoModel', () => {
       expect(deletedTodo).toBeNull();
     });
   });
+
+  describe('Priority Support', () => {
+    describe('create with priority', () => {
+      it('should create todo with MEDIUM priority by default', async () => {
+        const todo = await todoModel.create({ title: 'Default Priority' });
+        
+        expect(todo.priority).toBe('MEDIUM');
+      });
+
+      it('should create todo with specified HIGH priority', async () => {
+        const todo = await todoModel.create({ 
+          title: 'High Priority Task',
+          priority: 'HIGH'
+        });
+        
+        expect(todo.priority).toBe('HIGH');
+      });
+
+      it('should create todo with specified LOW priority', async () => {
+        const todo = await todoModel.create({ 
+          title: 'Low Priority Task',
+          priority: 'LOW'
+        });
+        
+        expect(todo.priority).toBe('LOW');
+      });
+
+      it('should create todo with MEDIUM priority when specified', async () => {
+        const todo = await todoModel.create({ 
+          title: 'Medium Priority Task',
+          priority: 'MEDIUM'
+        });
+        
+        expect(todo.priority).toBe('MEDIUM');
+      });
+    });
+
+    describe('update priority', () => {
+      it('should update todo priority from MEDIUM to HIGH', async () => {
+        const created = await todoModel.create({ title: 'Test Todo' });
+        expect(created.priority).toBe('MEDIUM');
+
+        const updated = await todoModel.update(created.id, { priority: 'HIGH' });
+        
+        expect(updated.priority).toBe('HIGH');
+        expect(updated.title).toBe('Test Todo'); // Other fields unchanged
+      });
+
+      it('should update todo priority from HIGH to LOW', async () => {
+        const created = await todoModel.create({ 
+          title: 'High Priority Task',
+          priority: 'HIGH'
+        });
+        
+        const updated = await todoModel.update(created.id, { priority: 'LOW' });
+        
+        expect(updated.priority).toBe('LOW');
+      });
+
+      it('should update priority along with other fields', async () => {
+        const created = await todoModel.create({ 
+          title: 'Original Title',
+          description: 'Original Description'
+        });
+        
+        const updated = await todoModel.update(created.id, {
+          title: 'Updated Title',
+          description: 'Updated Description',
+          completed: true,
+          priority: 'HIGH'
+        });
+        
+        expect(updated.title).toBe('Updated Title');
+        expect(updated.description).toBe('Updated Description');
+        expect(updated.completed).toBe(true);
+        expect(updated.priority).toBe('HIGH');
+      });
+    });
+
+    describe('priority-aware sorting', () => {
+      it('should sort todos by priority in findAll (HIGH > MEDIUM > LOW)', async () => {
+        // Create todos with different priorities
+        const lowPriority = await todoModel.create({ 
+          title: 'Low Priority',
+          priority: 'LOW'
+        });
+        const highPriority = await todoModel.create({ 
+          title: 'High Priority',
+          priority: 'HIGH'
+        });
+        const mediumPriority = await todoModel.create({ 
+          title: 'Medium Priority',
+          priority: 'MEDIUM'
+        });
+
+        const result = await todoModel.findAll();
+        
+        // Should be sorted by priority: HIGH, MEDIUM, LOW
+        expect(result.todos).toHaveLength(3);
+        expect(result.todos[0].priority).toBe('HIGH');
+        expect(result.todos[0].title).toBe('High Priority');
+        expect(result.todos[1].priority).toBe('MEDIUM');
+        expect(result.todos[1].title).toBe('Medium Priority');
+        expect(result.todos[2].priority).toBe('LOW');
+        expect(result.todos[2].title).toBe('Low Priority');
+      });
+
+      it('should sort by priority first, then by creation date for same priority', async () => {
+        // Create multiple HIGH priority todos
+        const high1 = await todoModel.create({ 
+          title: 'High Priority 1',
+          priority: 'HIGH'
+        });
+        
+        // Small delay to ensure different timestamps
+        await new Promise(resolve => setTimeout(resolve, 1));
+        
+        const high2 = await todoModel.create({ 
+          title: 'High Priority 2',
+          priority: 'HIGH'
+        });
+        
+        const medium1 = await todoModel.create({ 
+          title: 'Medium Priority',
+          priority: 'MEDIUM'
+        });
+
+        const result = await todoModel.findAll();
+        
+        expect(result.todos).toHaveLength(3);
+        // All HIGH priority todos should come first
+        expect(result.todos[0].priority).toBe('HIGH');
+        expect(result.todos[1].priority).toBe('HIGH');
+        expect(result.todos[2].priority).toBe('MEDIUM');
+        
+        // Within same priority, newer should come first (reverse chronological)
+        expect(result.todos[0].title).toBe('High Priority 2');
+        expect(result.todos[1].title).toBe('High Priority 1');
+      });
+
+      it('should maintain priority sorting with pagination', async () => {
+        // Create 5 todos with mixed priorities
+        await todoModel.create({ title: 'Low 1', priority: 'LOW' });
+        await todoModel.create({ title: 'High 1', priority: 'HIGH' });
+        await todoModel.create({ title: 'Medium 1', priority: 'MEDIUM' });
+        await todoModel.create({ title: 'High 2', priority: 'HIGH' });
+        await todoModel.create({ title: 'Low 2', priority: 'LOW' });
+
+        // Get first 3 todos
+        const page1 = await todoModel.findAll(1, 3);
+        
+        expect(page1.todos).toHaveLength(3);
+        expect(page1.total).toBe(5);
+        // First page should have HIGH priority todos first
+        expect(page1.todos[0].priority).toBe('HIGH');
+        expect(page1.todos[1].priority).toBe('HIGH');
+        expect(page1.todos[2].priority).toBe('MEDIUM');
+
+        // Get second page
+        const page2 = await todoModel.findAll(2, 3);
+        
+        expect(page2.todos).toHaveLength(2);
+        expect(page2.todos[0].priority).toBe('LOW');
+        expect(page2.todos[1].priority).toBe('LOW');
+      });
+    });
+
+    describe('migration logic for existing todos', () => {
+      it('should handle existing todos without priority field gracefully', async () => {
+        // This simulates existing todos in database that don't have priority field
+        // The migration logic should assign MEDIUM as default
+        const result = await todoModel.findAll();
+        expect(result.total).toBe(0);
+        
+        // After migration (simulated by creating new todos), all should have priority
+        const todo = await todoModel.create({ title: 'New Todo' });
+        expect(todo.priority).toBe('MEDIUM');
+      });
+    });
+
+    describe('priority validation in model', () => {
+      it('should accept all valid priority values', async () => {
+        const highTodo = await todoModel.create({ title: 'High', priority: 'HIGH' });
+        const mediumTodo = await todoModel.create({ title: 'Medium', priority: 'MEDIUM' });
+        const lowTodo = await todoModel.create({ title: 'Low', priority: 'LOW' });
+        
+        expect(highTodo.priority).toBe('HIGH');
+        expect(mediumTodo.priority).toBe('MEDIUM');
+        expect(lowTodo.priority).toBe('LOW');
+      });
+
+      it('should update to all valid priority values', async () => {
+        const todo = await todoModel.create({ title: 'Test Todo' });
+        
+        let updated = await todoModel.update(todo.id, { priority: 'HIGH' });
+        expect(updated.priority).toBe('HIGH');
+        
+        updated = await todoModel.update(todo.id, { priority: 'MEDIUM' });
+        expect(updated.priority).toBe('MEDIUM');
+        
+        updated = await todoModel.update(todo.id, { priority: 'LOW' });
+        expect(updated.priority).toBe('LOW');
+      });
+    });
+
+    describe('stats with priority consideration', () => {
+      it('should maintain correct stats regardless of priority', async () => {
+        await todoModel.create({ title: 'High Task', priority: 'HIGH' });
+        const mediumTodo = await todoModel.create({ title: 'Medium Task', priority: 'MEDIUM' });
+        await todoModel.create({ title: 'Low Task', priority: 'LOW' });
+        
+        // Complete one todo
+        await todoModel.update(mediumTodo.id, { completed: true });
+        
+        const stats = await todoModel.getStats();
+        
+        expect(stats.total).toBe(3);
+        expect(stats.completed).toBe(1);
+        expect(stats.pending).toBe(2);
+      });
+    });
+
+    describe('seed with priority support', () => {
+      it('should create seeded todos with MEDIUM priority by default', async () => {
+        await todoModel.seed();
+        
+        const result = await todoModel.findAll();
+        
+        expect(result.total).toBe(3);
+        result.todos.forEach(todo => {
+          expect(todo.priority).toBe('MEDIUM');
+        });
+      });
+    });
+  });
 });
