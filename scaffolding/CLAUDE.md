@@ -94,7 +94,7 @@ This project uses the multi-agent development workflow with:
 - **Testing**: pytest, pytest-cov
 - **Type Checking**: mypy
 - **Linting**: ruff/black/flake8
-- **Dependency Management**: pip/poetry/pipenv
+- **Dependency Management**: Poetry (default)
 
 **Frontend** (when needed): TypeScript/React
 - **Build Tool**: Vite
@@ -105,28 +105,52 @@ This project uses the multi-agent development workflow with:
 ## Getting Started
 
 ```bash
-# Python project setup
+# Python project setup with Poetry (recommended)
+poetry install
+
+# Run tests
+poetry run pytest
+
+# Run tests with coverage
+poetry run pytest --cov
+
+# Type checking
+poetry run mypy src/
+
+# Linting
+poetry run ruff check src/
+
+# Code formatting
+poetry run ruff format src/
+
+# Start development server (FastAPI example)
+poetry run uvicorn src.main:app --reload
+
+# Alternative: pip setup
 python -m venv venv
 source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 pip install -r requirements.txt
-
-# Run tests
-pytest
-
-# Type checking
-mypy src/
-
-# Linting
-ruff check src/
 ```
 
 ## Project Commands Template
 
+**With Poetry (Recommended)**:
+- `poetry run pytest` - Run all tests
+- `poetry run pytest --cov` - Run tests with coverage
+- `poetry run mypy src/` - Type checking
+- `poetry run ruff check src/` - Linting
+- `poetry run ruff format src/` - Code formatting
+- `poetry run uvicorn src.main:app --reload` - Start dev server (FastAPI)
+- `poetry run flask run` - Start dev server (Flask)
+- `poetry run python manage.py runserver` - Start dev server (Django)
+- `poetry add <package>` - Add dependency
+- `poetry add --group dev <package>` - Add dev dependency
+
+**With pip**:
 - `pytest` - Run all tests
 - `pytest --cov` - Run tests with coverage
 - `mypy src/` - Type checking
 - `ruff check src/` - Linting
-- `ruff format src/` - Code formatting
 
 ## Architecture Template
 

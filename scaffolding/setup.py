@@ -71,24 +71,24 @@ def copy_workflow_files(scaffolding_path: Path, project_path: Path):
         print("  ❌ Warning: .claude directory not found in scaffolding")
 
 
-def setup_python_files(scaffolding_path: Path, project_path: Path, use_poetry: bool):
+def setup_python_files(scaffolding_path: Path, project_path: Path, use_pip: bool):
     """Set up Python configuration files."""
     print("🐍 Setting up Python configuration...")
     
-    if use_poetry:
-        # Copy pyproject.toml for Poetry
-        src = scaffolding_path / "template-pyproject.toml"
-        dst = project_path / "pyproject.toml"
-        if src.exists():
-            shutil.copy2(src, dst)
-            print("  ✅ Created pyproject.toml (Poetry)")
-    else:
+    if use_pip:
         # Copy requirements.txt for pip
         src = scaffolding_path / "template-requirements.txt"  
         dst = project_path / "requirements.txt"
         if src.exists():
             shutil.copy2(src, dst)
             print("  ✅ Created requirements.txt (pip)")
+    else:
+        # Copy pyproject.toml for Poetry (default)
+        src = scaffolding_path / "template-pyproject.toml"
+        dst = project_path / "pyproject.toml"
+        if src.exists():
+            shutil.copy2(src, dst)
+            print("  ✅ Created pyproject.toml (Poetry)")
     
     # Copy .gitignore
     src = scaffolding_path / "template-gitignore"
@@ -166,7 +166,7 @@ def main():
     parser.add_argument("--path", help="Path where to create the project (default: current directory)")
     parser.add_argument("--tech-stack", choices=["fastapi", "flask", "django", "react", "full-stack"], 
                        default="fastapi", help="Technology stack template")
-    parser.add_argument("--poetry", action="store_true", help="Use Poetry instead of pip")
+    parser.add_argument("--pip", action="store_true", help="Use pip instead of Poetry (Poetry is default)")
     parser.add_argument("--github", action="store_true", help="Create GitHub repository")
     parser.add_argument("--no-git", action="store_true", help="Skip Git initialization")
     
@@ -189,6 +189,7 @@ def main():
     print(f"🚀 Setting up {args.project_name} with multi-agent workflow")
     print(f"📍 Location: {project_path}")
     print(f"🛠  Tech stack: {args.tech_stack}")
+    print(f"📦  Package manager: {'pip' if args.pip else 'Poetry'}")
     print()
     
     try:
@@ -202,7 +203,7 @@ def main():
         copy_workflow_files(scaffolding_path, project_path)
         
         # Set up Python configuration
-        setup_python_files(scaffolding_path, project_path, args.poetry)
+        setup_python_files(scaffolding_path, project_path, args.pip)
         
         # Update Claude configuration  
         update_claude_config(project_path, args.project_name, args.tech_stack)

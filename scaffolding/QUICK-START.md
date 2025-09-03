@@ -29,9 +29,12 @@ cp /path/to/scaffolding/WORKFLOW_RULES.md .
 # 3. Create project structure  
 mkdir -p src tests docs/adr docs/reports
 
-# 4. Set up Python
-cp /path/to/scaffolding/template-requirements.txt requirements.txt
+# 4. Set up Python (Poetry default)
+cp /path/to/scaffolding/template-pyproject.toml pyproject.toml
 cp /path/to/scaffolding/template-gitignore .gitignore
+
+# Or for pip setup
+cp /path/to/scaffolding/template-requirements.txt requirements.txt
 
 # 5. Initialize git
 git init && git add . && git commit -m "Initial commit"
@@ -44,11 +47,14 @@ gh repo create my-project --private --source=. --push
 # Basic FastAPI project
 python setup.py my-api
 
-# Flask project with Poetry
-python setup.py my-flask-app --tech-stack flask --poetry
+# Flask project with Poetry (default)
+python setup.py my-flask-app --tech-stack flask
 
-# Full-stack with React frontend
+# Full-stack with React frontend  
 python setup.py my-fullstack --tech-stack full-stack --github
+
+# Django project with pip instead of Poetry
+python setup.py my-django --tech-stack django --pip
 
 # Django project without Git
 python setup.py my-django --tech-stack django --no-git
@@ -69,7 +75,7 @@ my-project/
 ├── docs/
 │   ├── adr/               # ✅ Architecture Decision Records
 │   └── reports/           # ✅ Implementation closure reports
-├── requirements.txt        # ✅ Python dependencies
+├── pyproject.toml          # ✅ Poetry configuration (or requirements.txt for pip)
 ├── .gitignore             # ✅ Git ignore rules
 └── README.md              # ✅ Project documentation
 ```

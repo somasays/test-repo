@@ -53,7 +53,7 @@ your-project/
 - **Testing**: pytest, pytest-cov  
 - **Type Checking**: mypy
 - **Linting**: ruff/black/flake8
-- **Package Management**: pip/poetry/pipenv
+- **Package Management**: Poetry (default), pip optional
 
 ### TypeScript/React (When Needed)
 - **Build Tool**: Vite
