@@ -60,6 +60,15 @@ def copy_workflow_files(scaffolding_path: Path, project_path: Path):
             print(f"  ✅ Copied {file}")
         else:
             print(f"  ❌ Warning: {file} not found in scaffolding")
+    
+    # Copy .claude directory with agents
+    claude_src = scaffolding_path / ".claude"
+    claude_dst = project_path / ".claude"
+    if claude_src.exists():
+        shutil.copytree(claude_src, claude_dst, dirs_exist_ok=True)
+        print("  ✅ Copied .claude/agents/ directory")
+    else:
+        print("  ❌ Warning: .claude directory not found in scaffolding")
 
 
 def setup_python_files(scaffolding_path: Path, project_path: Path, use_poetry: bool):

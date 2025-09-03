@@ -8,6 +8,7 @@ This scaffolding provides a complete setup for GitHub-centric multi-agent develo
    ```bash
    cp scaffolding/CLAUDE.md /path/to/your/project/
    cp scaffolding/WORKFLOW_RULES.md /path/to/your/project/
+   cp -r scaffolding/.claude /path/to/your/project/
    ```
 
 2. **Initialize project structure**:
@@ -24,14 +25,19 @@ This scaffolding provides a complete setup for GitHub-centric multi-agent develo
 
 ### Core Workflow Files
 - **`CLAUDE.md`** - Main configuration file for Claude Code with workflow rules
-- **`WORKFLOW_RULES.md`** - Detailed multi-agent workflow documentation  
+- **`WORKFLOW_RULES.md`** - Detailed multi-agent workflow documentation
+- **`.claude/agents/`** - Agent definition files (software-engineer.md, principal-engineer.md)  
 - **`README.md`** - This setup guide
 
 ### Template Structure
 ```
 your-project/
 ├── CLAUDE.md                    # Claude Code configuration
-├── WORKFLOW_RULES.md           # Workflow documentation  
+├── WORKFLOW_RULES.md           # Workflow documentation
+├── .claude/
+│   └── agents/                 # Agent definition files
+│       ├── software-engineer.md
+│       └── principal-engineer.md
 ├── docs/
 │   ├── adr/                    # Architecture Decision Records
 │   └── reports/                # Implementation closure reports

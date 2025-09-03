@@ -62,6 +62,8 @@ After setup, you should have:
 my-project/
 ├── CLAUDE.md                # ✅ Claude Code configuration
 ├── WORKFLOW_RULES.md       # ✅ Workflow documentation
+├── .claude/
+│   └── agents/             # ✅ Agent definition files
 ├── src/                    # ✅ Source code directory
 ├── tests/                  # ✅ Test directory
 ├── docs/
