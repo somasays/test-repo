@@ -1,0 +1,38 @@
+# Python Project Template Requirements
+# Customize this file based on your project needs
+
+# Web Framework (choose one)
+fastapi>=0.104.0        # Modern async web framework
+# flask>=2.3.0          # Traditional web framework  
+# django>=4.2.0         # Full-featured web framework
+
+# Database (choose based on your needs)
+# sqlalchemy>=2.0.0     # ORM for SQL databases
+# psycopg2-binary>=2.9.0 # PostgreSQL adapter
+# pymongo>=4.0.0        # MongoDB driver
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-asyncio>=0.21.0  # For async testing
+
+# Type Checking
+mypy>=1.5.0
+
+# Code Quality
+ruff>=0.1.0             # Fast linter and formatter
+black>=23.0.0           # Code formatter (alternative to ruff format)
+
+# Development
+python-dotenv>=1.0.0    # Environment variables
+pydantic>=2.0.0         # Data validation
+
+# Optional: Async HTTP client
+# httpx>=0.25.0
+
+# Optional: Authentication
+# python-jose[cryptography]>=3.3.0
+# passlib[bcrypt]>=1.7.4
+
+# Optional: Database migrations
+# alembic>=1.12.0
