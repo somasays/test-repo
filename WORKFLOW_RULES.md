@@ -101,6 +101,8 @@ gh pr create --title "feat: <description>" \
 ```
 
 **Principal Engineer Agent** (Code Review in PR):
+
+**Multi-User Repository**:
 ```bash
 # Approve PR
 gh pr review <pr> --approve --body "Code review complete.
@@ -112,6 +114,23 @@ gh pr review <pr> --approve --body "Code review complete.
 gh pr review <pr> --request-changes --body "Issues found:
 - Missing test coverage for edge case X
 - Performance concern in module Y"
+```
+
+**Single-User Repository** (GitHub blocks self-approval):
+```bash
+# Post review as comment (GitHub limitation workaround)
+gh pr comment <pr> --body "## Principal Engineer Code Review - APPROVED ✅
+
+**Status**: ✅ APPROVED FOR MERGE
+
+Code review complete:
+✅ Implementation follows approved plan
+✅ Tests comprehensive  
+✅ Quality gates pass
+
+**Decision**: This PR is approved and ready for merge.
+
+**Reviewer**: Principal Engineer"
 ```
 
 ### Phase 5: Merge & Close
@@ -285,9 +304,11 @@ gh pr merge 10
 
 ❌ **Creating review documents in files** → Use issue/PR comments
 ❌ **Implementing before issue approval** → Wait for "APPROVED ✅"
-❌ **Forgetting ADR links** → Always bidirectional link
+❌ **Forgetting ADR links** → Always bidirectional link (when ADR created)
 ❌ **Skipping issue comments** → All plans/research in issues
 ❌ **Direct implementation** → Always delegate to agents
+❌ **Missing closure reports** → Always create closure report after feature completion
+❌ **Wrong PR review method** → Use `gh pr comment` for single-user repos, `gh pr review` for multi-user
 
 ## Summary
 

@@ -48,6 +48,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 1. SWE creates PR referencing issue number
 2. PE reviews code in **PR comments**
 3. PE approves/requests changes in **PR review**
+   - **Single User Repos**: Use `gh pr comment` for review (GitHub blocks self-approval)
+   - **Multi User Repos**: Use `gh pr review --approve` or `gh pr review --request-changes`
 4. SWE addresses feedback in PR
 
 #### Phase 5: Completion
@@ -134,10 +136,25 @@ gh issue view <issue-number> --comments
 # PR comments (for code review)
 gh pr comment <pr-number> --body "content"
 
-# PR review
+# PR review (multi-user repos)
 gh pr review <pr-number> --approve --body "content"
 gh pr review <pr-number> --request-changes --body "content"
+
+# PR review (single-user repos - use comments due to GitHub limitation)
+gh pr comment <pr-number> --body "## Principal Engineer Review - APPROVED ✅"
 ```
+
+## Repository Setup Recommendations
+
+### Multi-User Development (Preferred)
+- Add team members as collaborators for proper PR approvals
+- Use branch protection rules requiring reviews
+- Enable proper GitHub workflow with `gh pr review` commands
+
+### Single-User Development (Acceptable)
+- Use `gh pr comment` for PE reviews (GitHub blocks self-approval)
+- Maintain same review quality and documentation standards
+- Consider adding a bot or second account for proper approvals
 
 ## Notes
 
